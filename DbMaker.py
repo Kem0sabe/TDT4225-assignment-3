@@ -1,14 +1,15 @@
 import os
 from datetime import datetime
 from pymongo import MongoClient
+from DbConnector import DbConnector
 
 
 class DbMaker:
     DATASET_PATH = "dataset/"
 
     def __init__(self):
-        self.connection = MongoClient('mongodb://localhost:27017/')
-        self.db = self.connection["test_db"]
+        self.connection = DbConnector(DATABASE='test_db', HOST='localhost', USER='root', PASSWORD='password')
+        self.db = self.connection.db
         self.labels = self.read_labels()
 
     def read_labels(self):
@@ -22,6 +23,14 @@ class DbMaker:
         self.activity = self.db["activity"]
         self.trackpoint = self.db["trackpoint"]
 
+    def create_indexes(self):
+        """
+        This method creates indexes for the collections
+        """
+        self.activity.create_index("user_id")
+        self.trackpoint.create_index("activity_id")
+        self.activity.create_index("start_date_time")
+        self.trackpoint.create_index('altitude')
 
     def insert_user_collection(self):
         """
@@ -32,8 +41,7 @@ class DbMaker:
         for user_id in user_ids:
             self.user.insert_one({"_id": user_id, "has_labels": (user_id in self.labels)})
 
-
-    def insert_activity_collection(self,user_id, transportation_mode, start_date_time, end_date_time):
+    def insert_activity_collection(self, user_id, transportation_mode, start_date_time, end_date_time):
         """
         This method insert the given parameters to the activity table
 
@@ -61,7 +69,6 @@ class DbMaker:
         :param filtered_trackpoints: List of trackpoints where we have removed unrelevant info and added activity id
         """
         self.trackpoint.insert_many(filtered_trackpoints)
-       
 
     def filter_trackpoints(self, trackpoints):
         """
@@ -156,7 +163,8 @@ if program.connection:
     print("This might take a while...")
     print("Wait for the 'Done' message")
     program.create_collections()
-    #program.insert_user_collection()
+    program.create_indexes()
+    program.insert_user_collection()
     program.filter_and_insert_activity()
-    #program.connection.close()
+    program.connection.close_connection()
     print("Done")
