@@ -45,7 +45,7 @@ class Queries:
 
         result = self.activity.aggregate(pipeline)
         average = next(result, None)["average_activities_per_user"]
-        print("Average number of activities per user: ", average)
+        print("The average amount of activities per user are:", average)
         print()
 
     def task_3(self):
