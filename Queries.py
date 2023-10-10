@@ -217,18 +217,17 @@ class Queries:
         8. Find the top 20 users who have gained the most altitude meters.
         """
         print("Task 8 - Find the top 20 users who have gained the most altitude meters.")
-        all_activities = self.activity.find({}, {"_id": 1})
-        all_activity_ids = [act["_id"] for act in all_activities]
+        all_activities = activity.find({},{"_id": 1,"user_id": 1})
+        all_activity_ids = [(act["_id"],act["user_id"]) for act in all_activities] 
 
-        activity_gain = {}
-        for activity_id in all_activity_ids:
-            activity_gain[activity_id] = 0
-            trackpoints = list(self.trackpoint.find({"activity_id": {"$eq": activity_id}}))
+        user_gain = Counter()
+        for activity_id,user_id in all_activity_ids:
+            trackpoints = list(trackpoint.find({"activity_id": {"$eq": activity_id}}))
             for i in range(1, len(trackpoints)):
-                difference = trackpoints[i]['altitude'] - trackpoints[i - 1]['altitude']
-                if difference > 0: activity_gain[activity_id] += difference
+                difference = trackpoints[i]['altitude'] - trackpoints[i-1]['altitude']
+                if difference > 0: user_gain[user_id] += difference
 
-        top20 = sorted(activity_gain.items(), key=lambda x: x[1], reverse=True)[:20]
+        top20 = sorted(user_gain.items(), key=lambda x: x[1], reverse=True)[:20]
         print(tabulate(top20, headers=["user_id", "total gain (m)"], tablefmt="pretty"))
         print()
 
@@ -249,7 +248,7 @@ class Queries:
                 prev_point = point
                 continue
             timediff = (point["date"] - prev_point["date"]).total_seconds()
-            if timediff > 60 * 5 and point["activity_id"] == prev_point["activity_id"]:  # 5 minuttes
+            if timediff > 60 * 5 and point["activity_id"] == prev_point["activity_id"]:  
                 illegal_activities.add(point["activity_id"])
             prev_point = point
 
