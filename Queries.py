@@ -1,3 +1,4 @@
+from collections import Counter
 from DbConnector import DbConnector
 from haversine import haversine
 import datetime
@@ -217,12 +218,12 @@ class Queries:
         8. Find the top 20 users who have gained the most altitude meters.
         """
         print("Task 8 - Find the top 20 users who have gained the most altitude meters.")
-        all_activities = activity.find({},{"_id": 1,"user_id": 1})
+        all_activities = self.activity.find({},{"_id": 1,"user_id": 1})
         all_activity_ids = [(act["_id"],act["user_id"]) for act in all_activities] 
 
         user_gain = Counter()
         for activity_id,user_id in all_activity_ids:
-            trackpoints = list(trackpoint.find({"activity_id": {"$eq": activity_id}}))
+            trackpoints = list(self.trackpoint.find({"activity_id": {"$eq": activity_id}}))
             for i in range(1, len(trackpoints)):
                 difference = trackpoints[i]['altitude'] - trackpoints[i-1]['altitude']
                 if difference > 0: user_gain[user_id] += difference
